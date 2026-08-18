@@ -1,0 +1,21 @@
+# 依赖
+node_modules/
+
+# 日志
+*.log
+app-*.log
+
+# 测试/临时文件
+test-*.mjs
+ui-test.mjs
+splash-shot.png
+after-zoom-*.png
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 备份
+*.bak
+*.bak-*
+boot-*.mjs

@@ -1,0 +1,183 @@
+/* ============================================================
+ * Pi 桌面 — SVG 图标动画（配合 icons.js）
+ * 图标基类 .ico；一次性动画类加在 <svg> 上（JS 通过 PiIcon 控制）
+ * 悬停/选中动画由 CSS 驱动，尽量不占 JS 成本
+ * ============================================================ */
+
+/* ---------- 基类 ---------- */
+.ico {
+  display: inline-block;
+  vertical-align: middle;
+  flex: 0 0 auto;
+  width: 16px;   /* 默认尺寸，具体上下文可覆盖 */
+  height: 16px;
+}
+/* 所有子元素以自身包围盒为变换原点（与 dl-ico 一致） */
+.ico * { transform-box: fill-box; transform-origin: center; }
+
+/* 图标+文字按钮 */
+.ico-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- 尺寸上下文 ---------- */
+.nav-ico .ico { width: 16px; height: 16px; }
+.side-toggle .chev .ico { width: 12px; height: 12px; }
+.history-chev .ico { width: 10px; height: 10px; }
+.side-icon-btn .ico { width: 13px; height: 13px; }
+.btn .ico { width: 14px; height: 14px; }
+.btn.small .ico { width: 13px; height: 13px; }
+.btn.dl-start .ico { width: 15px; height: 15px; }
+.dl-header h2 .ico { width: 16px; height: 16px; }
+.dock-side-btn .ico { width: 13px; height: 13px; }
+.node-gear .ico { width: 13px; height: 13px; }
+.ctx-item .ico { width: 14px; height: 14px; }
+.history-del .ico, .bp-del .ico { width: 12px; height: 12px; }
+.drag-grip .ico { width: 14px; height: 14px; }
+
+/* 按压反馈 */
+.btn:active .ico,
+.nav-item:active .ico,
+.dock-side-btn:active .ico,
+.side-icon-btn:active .ico,
+.node-gear:active .ico { transform: scale(.85); }
+
+/* ---------- keyframes ---------- */
+@keyframes ico-chat-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: .35; }
+  30%           { transform: translateY(-1.5px); opacity: 1; }
+}
+@keyframes ico-pz-wiggle {
+  0%, 100% { transform: rotate(-7deg); }
+  50%      { transform: rotate(7deg); }
+}
+@keyframes ico-chev-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(1.5px); }
+}
+@keyframes ico-spin { to { transform: rotate(360deg); } }
+@keyframes ico-trash-lid {
+  0%, 100% { transform: rotate(0); }
+  50%      { transform: rotate(-22deg) translate(-1px, -.5px); }
+}
+@keyframes ico-shake-x {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-1.5px); }
+  75%      { transform: translateX(1.5px); }
+}
+@keyframes ico-plus-spin { to { transform: rotate(90deg); } }
+@keyframes ico-nudge-l { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-2px); } }
+@keyframes ico-nudge-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+@keyframes ico-nudge-t { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes ico-nudge-b { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+@keyframes ico-float-out { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+@keyframes ico-close-rot { to { transform: rotate(90deg); } }
+@keyframes ico-send-fly {
+  0%   { transform: translate(0, 0); opacity: 1; }
+  70%  { transform: translate(3px, -3px); opacity: .9; }
+  100% { transform: translate(16px, -16px); opacity: 0; }
+}
+@keyframes ico-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+@keyframes ico-save-flash { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes ico-gear-spin { to { transform: rotate(120deg); } }
+@keyframes ico-dbg-wiggle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes ico-min-slide { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.5px); } }
+@keyframes ico-lib-open { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.08); } }
+@keyframes ico-grip-dot {
+  0%, 100% { opacity: .45; }
+  50%      { opacity: 1; }
+}
+
+/* ---------- 导航图标 ---------- */
+.nav-item:hover .ico-chat .dot,
+.nav-item.active .ico-chat .dot { animation: ico-chat-dot 1.4s ease-in-out infinite; }
+.nav-item:hover .ico-chat .dot:nth-of-type(2),
+.nav-item.active .ico-chat .dot:nth-of-type(2) { animation-delay: .18s; }
+.nav-item:hover .ico-chat .dot:nth-of-type(3),
+.nav-item.active .ico-chat .dot:nth-of-type(3) { animation-delay: .36s; }
+
+.nav-item:hover .ico-puzzle .piece,
+.nav-item.active .ico-puzzle .piece { animation: ico-pz-wiggle .5s ease-in-out 2; }
+
+/* 今日总结：对勾划出 + 底线滑动 */
+@keyframes ico-sum-check {
+  0%   { transform: translateX(-3px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.nav-item:hover .ico-summary .lines,
+.nav-item.active .ico-summary .lines { animation: ico-sum-check .45s ease-out 1; }
+
+/* ---------- 历史记录 ---------- */
+.history-chev:hover .ico-chev { animation: ico-chev-bounce .6s ease 1; }
+.side-icon-btn:hover .ico-refresh { animation: ico-spin .7s linear 1; }
+.side-icon-btn:active .ico-refresh { animation: ico-spin .5s linear 1; }
+/* JS 加载中：PiIcon.play(el, "spin", ms) 会加 .spin */
+.ico-refresh.spin { animation: ico-spin .7s linear infinite; }
+
+.history-del:hover .ico-trash,
+.bp-del:hover .ico-trash,
+.dl-actions .btn.del:hover .ico-trash { animation: ico-shake-x .4s ease 1; }
+.history-del:hover .ico-trash .lid,
+.bp-del:hover .ico-trash .lid,
+.dl-actions .btn.del:hover .ico-trash .lid { animation: ico-trash-lid .4s ease 1; }
+
+/* ---------- 下载面板控件 ---------- */
+.btn:hover .ico-plus { animation: ico-plus-spin .3s ease 1; }
+
+.dock-side-btn:hover .ico-dockleft { animation: ico-nudge-l .4s ease 1; }
+.dock-side-btn:hover .ico-dockright { animation: ico-nudge-r .4s ease 1; }
+.dock-side-btn:hover .ico-docktop { animation: ico-nudge-t .4s ease 1; }
+.dock-side-btn:hover .ico-dockbottom { animation: ico-nudge-b .4s ease 1; }
+.dock-side-btn.active .ico-dockleft,
+.dock-side-btn.active .ico-dockright,
+.dock-side-btn.active .ico-docktop,
+.dock-side-btn.active .ico-dockbottom { animation: ico-pulse 1.6s ease-in-out infinite; }
+
+.btn:hover .ico-floatwin { animation: ico-float-out .5s ease 1; }
+.btn:hover .ico-minimize { animation: ico-min-slide .4s ease 1; }
+.btn:hover .ico-dockback .arr { animation: ico-nudge-l .45s ease 1; }
+.btn:hover .ico-close,
+.side-icon-btn:hover .ico-close { animation: ico-close-rot .3s ease 1; }
+
+/* ---------- 主窗口动作 ---------- */
+/* 发送：PiIcon.play(sendBtn, "send", 900) 加 .send → 纸飞机飞出 */
+.ico-send.send .plane { animation: ico-send-fly .8s ease-out 1; }
+
+/* 运行/停止：运行中 PiIcon.play(runBtn, "pulse", 0) 持续脉冲 */
+.btn:hover .ico-run,
+.btn:hover .ico-stop { animation: ico-pulse .5s ease 1; }
+.ico-run.pulse,
+.ico-stop.pulse { animation: ico-pulse .8s ease-in-out infinite; }
+
+/* ---------- 画布工具栏 ---------- */
+.ico-save.flash .slot { animation: ico-save-flash .7s ease 1; }
+.btn:hover .ico-save .floppy,
+.btn:hover .ico-lib .book { animation: ico-lib-open .5s ease 1; }
+
+.node-gear:hover .ico-gear { animation: ico-gear-spin .5s ease 1; }
+.btn:hover .ico-debug { animation: ico-dbg-wiggle .4s ease 1; }
+
+/* 悬浮窗口拖动手柄 */
+.drag-grip:hover .ico-grip .dots line { animation: ico-grip-dot 1.2s ease-in-out infinite; }
+.drag-grip:hover .ico-grip .dots line:nth-of-type(2),
+.drag-grip:hover .ico-grip .dots line:nth-of-type(5) { animation-delay: .2s; }
+.drag-grip:hover .ico-grip .dots line:nth-of-type(3),
+.drag-grip:hover .ico-grip .dots line:nth-of-type(6) { animation-delay: .4s; }
+
+/* ---------- 无障碍：减少动效 ----------
+ * 只关闭“无限循环/自动播放”类动画（呼吸、脉冲、持续旋转）；
+ * 保留一次性悬停/按压微交互（短促、由用户触发、提供必要反馈）。
+ * 注：本机系统开启了“减少动态效果”，因此无限循环会退化为播放一次。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item:hover .ico-chat .dot,
+  .nav-item.active .ico-chat .dot,
+  .dock-side-btn.active .ico-dockleft,
+  .dock-side-btn.active .ico-dockright,
+  .dock-side-btn.active .ico-docktop,
+  .dock-side-btn.active .ico-dockbottom,
+  .ico-refresh.spin,
+  .ico-run.pulse,
+  .ico-stop.pulse,
+  .drag-grip:hover .ico-grip .dots line {
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "lastChangelogVersion": "0.84.1",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-flash",
+  "defaultThinkingLevel": "max"
+}

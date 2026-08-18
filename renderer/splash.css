@@ -1,0 +1,152 @@
+/* ============================================================
+ * Pi Desktop — 加载窗口（Splash）样式
+ * π Logo 呼吸光晕 + 双旋转光环 + 流动加载条
+ * zooming 阶段：图标平移对齐主页图标 + 整体淡出
+ * ============================================================ */
+
+:root {
+  --bg: #0c1015;
+  --accent: #5e8bff;
+  --accent-2: #7ee0c3;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent; /* 透明窗口：放大时只有圆角卡片可见 */
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--text);
+  user-select: none;
+}
+
+.splash {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 42%, rgba(94, 139, 255, .14), transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% 66%, rgba(126, 224, 195, .07), transparent 70%),
+    var(--bg);
+}
+
+/* ---------- Logo（与主页 .home-logo 同款 56×56 渐变块） ---------- */
+.splash-logo-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: splash-pop .6s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+@keyframes splash-pop {
+  from { transform: scale(.55); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.splash-logo {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 15px;
+  font-size: 34px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 8px 30px rgba(94, 139, 255, .35);
+  animation: splash-breathe 2.4s ease-in-out infinite;
+}
+@keyframes splash-breathe {
+  0%, 100% { box-shadow: 0 8px 26px rgba(94, 139, 255, .3); }
+  50%      { box-shadow: 0 8px 44px rgba(94, 139, 255, .55); }
+}
+
+/* 双旋转光环 */
+.splash-ring {
+  position: absolute;
+  inset: -13px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(94, 139, 255, .85);
+  border-right-color: rgba(94, 139, 255, .25);
+  animation: splash-spin 1.6s linear infinite;
+  pointer-events: none;
+}
+.splash-ring-2 {
+  inset: -24px;
+  border-width: 1.5px;
+  border-top-color: transparent;
+  border-bottom-color: rgba(126, 224, 195, .75);
+  border-left-color: rgba(126, 224, 195, .22);
+  animation: splash-spin-rev 2.4s linear infinite;
+}
+@keyframes splash-spin { to { transform: rotate(360deg); } }
+@keyframes splash-spin-rev { to { transform: rotate(-360deg); } }
+
+.splash-title {
+  margin-top: 22px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  animation: splash-fade-up .8s .25s ease both;
+}
+@keyframes splash-fade-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* 加载条 */
+.splash-bar {
+  position: relative;
+  margin-top: 24px;
+  width: min(300px, 70%);
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .07);
+  overflow: hidden;
+  animation: splash-fade-up .8s .55s ease both;
+}
+.splash-bar-inner {
+  position: absolute;
+  top: 0; left: -40%;
+  width: 40%; height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  animation: splash-flow 1.4s ease-in-out infinite;
+}
+@keyframes splash-flow {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
+.splash-status {
+  margin-top: 13px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  letter-spacing: .3px;
+  animation: splash-fade-up .8s .7s ease both;
+  transition: color .3s;
+}
+.splash-status.done { color: var(--accent-2); }
+.splash-status.error { color: #f85149; }
+
+/* ---------- 放大衔接：窗口一次性放大，内容用 GPU transform 动画 ---------- */
+/* 窗口变为主窗口尺寸后（≥800px 宽），内容立即以双轴 s0 缩放显示（避免闪帧）；
+   sx/sy = 加载窗口宽高 / 主窗口宽高，由 splash:prepare 消息写入 --zoom-sx/--zoom-sy */
+@media (min-width: 800px) {
+  #splashContent {
+    transform: scale(var(--zoom-sx, 0.356), var(--zoom-sy, 0.366));
+    transform-origin: 50% 50%; /* 内容中心 = 屏幕中心：视觉 = 窗口从中心放大 */
+  }
+}

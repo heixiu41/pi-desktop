@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;" />
+  <title>Pi 节点画布</title>
+  <link rel="stylesheet" href="icons.css" />
+  <link rel="stylesheet" href="canvas.css" />
+</head>
+<body>
+  <div id="canvasApp">
+    <!-- 工具栏 -->
+    <header id="toolbar">
+      <input id="bpName" class="bp-name" placeholder="蓝图名称" spellcheck="false" />
+      <button id="runBtn" class="btn primary ico-btn" title="拓扑执行整张蓝图（无依赖分支并行）"><span data-ico="run"></span>运行</button>
+      <button id="debugBtn" class="btn ico-btn" title="仅运行选中节点（上游用缓存结果）"><span data-ico="debug"></span>调试</button>
+      <button id="stopBtn" class="btn danger ico-btn" hidden><span data-ico="stop"></span>停止</button>
+      <span class="spacer"></span>
+      <button id="newBtn" class="btn ico-btn" title="新建空白蓝图"><span data-ico="plus"></span>新建</button>
+      <button id="saveBtn" class="btn ico-btn" title="保存到 ~/.pi/blueprints/"><span data-ico="save"></span>保存</button>
+      <div class="load-wrap" id="loadWrap">
+        <button id="loadBtn" class="btn ico-btn" title="加载蓝图或预设"><span data-ico="lib"></span>蓝图库</button>
+        <div id="loadMenu" class="load-menu" hidden>
+          <input id="loadSearch" class="load-search" placeholder="搜索蓝图…" spellcheck="false" />
+          <div id="loadList" class="load-list"></div>
+        </div>
+      </div>
+      <button id="libBtn" class="btn ico-btn" title="节点库 / 运行日志"><span data-ico="lib"></span>面板</button>
+      <button id="closeBtn" class="btn" title="关闭窗口" data-ico="close"></button>
+    </header>
+
+    <!-- 画布 -->
+    <div id="canvasWrap">
+      <div id="world">
+        <svg id="edgeLayer"></svg>
+        <div id="nodeLayer"></div>
+      </div>
+      <div id="boxSelect" hidden></div>
+    </div>
+
+    <!-- 状态栏 -->
+    <footer id="statusbar">
+      <span id="statusText">就绪 · 双击节点配置 · 拖拽空白平移 · 滚轮缩放 · Shift拖拽框选 · 右键有菜单</span>
+      <span class="spacer"></span>
+      <button id="delSelBtn" class="btn small danger ico-btn" hidden><span data-ico="trash"></span>删除选中</button>
+      <span id="statInfo"></span>
+    </footer>
+
+    <!-- 右侧面板 -->
+    <aside id="sidePanel" hidden>
+      <div id="panelResizer" title="拖拽调整面板宽度"></div>
+      <div class="panel-tabs">
+        <button class="ptab active" data-tab="lib">节点库</button>
+        <button class="ptab" data-tab="log">运行日志</button>
+        <button class="ptab" data-tab="bps">蓝图</button>
+      </div>
+      <div class="panel-body">
+        <div id="tab-lib" class="ptab-body"></div>
+        <div id="tab-log" class="ptab-body" hidden></div>
+        <div id="tab-bps" class="ptab-body" hidden></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 节点配置弹窗 -->
+  <div id="configModal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <span id="cfgTitle">节点配置</span>
+        <button id="cfgClose" class="btn small" data-ico="close"></button>
+      </div>
+      <div class="modal-body">
+        <label>标题</label>
+        <input id="cfgName" class="cfg-input" spellcheck="false" />
+        <div id="cfgAgentFields">
+          <label>系统提示词</label>
+          <textarea id="cfgSystemPrompt" class="cfg-input cfg-textarea" spellcheck="false"></textarea>
+          <div class="cfg-row">
+            <div class="cfg-col">
+              <label>模型</label>
+              <select id="cfgModel" class="cfg-input"></select>
+            </div>
+            <div class="cfg-col">
+              <label>思考级别</label>
+              <select id="cfgThinking" class="cfg-input">
+                <option value="">默认</option>
+                <option value="off">off</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+                <option value="xhigh">xhigh</option>
+                <option value="max">max</option>
+              </select>
+            </div>
+          </div>
+          <div class="cfg-row">
+            <div class="cfg-col">
+              <label>温度（预留，暂不生效）</label>
+              <input id="cfgTemp" type="number" step="0.1" min="0" max="2" class="cfg-input" />
+            </div>
+            <div class="cfg-col">
+              <label>最大上下文（token）</label>
+              <input id="cfgMaxCtx" type="number" step="1000" min="0" class="cfg-input" placeholder="0=默认" />
+            </div>
+          </div>
+          <label>工具白名单（逗号分隔，默认 read,bash,edit,write,download）</label>
+          <input id="cfgTools" class="cfg-input" spellcheck="false" />
+          <label class="cfg-check">
+            <input type="checkbox" id="cfgCarry" />
+            <span>传导模式：把收到的对话记录 + 本轮发言一起传给下游（用于节点链多轮传导）</span>
+          </label>
+        </div>
+        <div id="cfgInputFields">
+          <label>输入内容（文本）</label>
+          <textarea id="cfgContent" class="cfg-input cfg-textarea" spellcheck="false"></textarea>
+          <label>或文件路径（type=path/file/image）</label>
+          <input id="cfgPath" class="cfg-input" spellcheck="false" />
+        </div>
+        <div id="cfgRetrieveFields">
+          <label>返回条数 top-K</label>
+          <input id="cfgTopK" type="number" min="1" max="20" class="cfg-input" />
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">在本地知识库中语义检索，返回匹配的文本片段</div>
+        </div>
+        <div id="cfgConferenceFields">
+          <label>轮数（填 0 = 由 AI 主持人判定何时结束）</label>
+          <input id="cfgRounds" type="number" min="0" max="10" class="cfg-input" />
+          <label>最大轮数（安全上限，主持人模式下建议 4-6）</label>
+          <input id="cfgMaxRounds" type="number" min="1" max="10" class="cfg-input" />
+          <label>AI 主持人（可选 JSON：{"name":"主持人","systemPrompt":"判定继续或结束"}，留空用固定轮数）</label>
+          <textarea id="cfgJudge" class="cfg-input cfg-textarea" spellcheck="false"></textarea>
+          <label>参与者（JSON 数组：{"name":"名字","systemPrompt":"人设"}）</label>
+          <textarea id="cfgParticipants" class="cfg-input cfg-textarea" spellcheck="false"></textarea>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">主持人每轮评审对话并判定「继续/结束」，实现 AI 驱动的循环</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="cfgSave" class="btn primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div id="ctxMenu" class="ctx-menu" hidden></div>
+
+  <script src="icons.js"></script>
+  <script src="canvas.js"></script>
+</body>
+</html>

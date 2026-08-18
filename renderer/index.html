@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*" />
+  <title>Pi Desktop</title>
+  <link rel="stylesheet" href="icons.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="layout">
+    <!-- 侧边栏 -->
+    <aside id="sidebar">
+      <div class="side-brand">
+        <span class="logo">π</span>
+        <span class="brand-name">Pi Desktop</span>
+      </div>
+      <button id="sideToggle" class="side-toggle" title="收起侧边栏"><span class="chev" data-ico="collapse"></span></button>
+      <nav class="side-nav">
+        <button class="nav-item active" data-view="chat">
+          <span class="nav-ico" data-ico="chat"></span><span class="nav-label">聊天</span>
+        </button>
+        <button class="nav-item" data-view="downloads">
+          <span class="nav-ico" id="dlNavIco" data-ico="download"></span><span class="nav-label">下载</span>
+          <span class="nav-badge" id="dlBadge" hidden></span>
+        </button>
+        <button class="nav-item" data-view="nodes">
+          <span class="nav-ico" data-ico="puzzle"></span><span class="nav-label">节点</span>
+        </button>
+        <button class="nav-item" data-view="kb">
+          <span class="nav-ico" data-ico="book"></span><span class="nav-label">知识库</span>
+        </button>
+        <button class="nav-item" data-view="summary">
+          <span class="nav-ico" data-ico="summary"></span><span class="nav-label">总结</span>
+        </button>
+        <button class="nav-item" data-view="api">
+          <span class="nav-ico" data-ico="key"></span><span class="nav-label">API 配置</span>
+        </button>
+      </nav>
+
+      <!-- 历史记录 -->
+      <div class="side-history">
+        <div class="side-history-head" id="historyHead">
+          <span class="history-chev" id="historyChev" data-ico="chev"></span>
+          <span class="side-history-title">历史记录</span>
+          <button id="historyRefreshBtn" class="side-icon-btn" title="刷新历史记录" data-ico="refresh"></button>
+        </div>
+        <div id="historyList" class="side-history-list"></div>
+      </div>
+
+      <div class="side-foot">
+        <div class="side-cwd-title">工作目录</div>
+        <div class="side-cwd" id="sideCwd" title=""></div>
+      </div>
+      <div class="side-resize" id="sideResize" title="拖拽调整宽度"></div>
+    </aside>
+
+    <!-- 主区域 -->
+    <div id="main">
+      <!-- 主页 -->
+      <section id="homeView" hidden>
+        <div class="home-hero">
+          <div class="home-logo">π</div>
+          <h1 class="home-title">Pi Desktop</h1>
+          <p class="home-sub">多智能体节点工作流 · 受管下载 · 历史会话</p>
+          <div class="home-input-wrap">
+            <textarea id="homeInput" rows="1" placeholder="输入消息，开始与 Pi 对话…" spellcheck="false"></textarea>
+            <button id="homeSendBtn" class="btn primary ico-btn" title="发送"><span data-ico="send"></span></button>
+          </div>
+        </div>
+        <div class="home-sections">
+          <div class="home-section" id="homeRunsSection" hidden>
+            <h3>⚡ 进行中的节点任务</h3>
+            <div id="homeRuns" class="home-runs"></div>
+          </div>
+          <div class="home-section">
+            <h3>💬 最近的聊天</h3>
+            <div id="homeChats" class="home-chats"></div>
+          </div>
+        </div>
+      </section>
+
+      <div id="dockArea">
+        <!-- 聊天视图（始终可见） -->
+        <section id="chatView">
+          <header id="topbar">
+            <div class="controls">
+              <label class="ctl">
+                <span class="ctl-label">模型</span>
+                <select id="modelSelect" title="切换模型"></select>
+              </label>
+              <label class="ctl">
+                <span class="ctl-label">思考</span>
+                <select id="thinkingSelect" title="思考级别">
+                  <option value="off">关闭</option>
+                  <option value="minimal">minimal</option>
+                  <option value="low">low</option>
+                  <option value="medium">medium</option>
+                  <option value="high">high</option>
+                  <option value="xhigh">xhigh</option>
+                  <option value="max">max</option>
+                </select>
+              </label>
+              <button id="newBtn" class="btn ico-btn" title="开始新会话"><span data-ico="newfile"></span>新会话</button>
+              <button id="promptBtn" class="btn ico-btn" title="自定义系统提示词"><span data-ico="gear"></span>提示词</button>
+            </div>
+          </header>
+
+          <div id="promptPanel" hidden>
+            <div class="prompt-head">
+              <span class="prompt-title">系统提示词（附加在节点系统说明之后）</span>
+              <span id="promptStatus" class="prompt-status"></span>
+              <span class="dl-spacer"></span>
+              <button id="promptSaveBtn" class="btn primary small">保存</button>
+              <button id="promptCloseBtn" class="btn small">关闭</button>
+            </div>
+            <textarea id="promptText" class="prompt-textarea" rows="6" placeholder="输入自定义提示词，例如：回答时用中文、语气简洁、优先给出代码示例…（留空则不加）" spellcheck="false"></textarea>
+          </div>
+
+          <div id="cwdbar">
+            <span class="cwd-label">工作目录</span>
+            <span id="cwdText" class="cwd-text" title=""></span>
+            <button id="cwdBtn" class="btn small" title="选择 Pi 的工作目录">切换…</button>
+            <span id="status" class="status"></span>
+          </div>
+
+          <main id="msgList"></main>
+
+          <footer id="inputbar">
+            <div id="attachChip" hidden><img id="attachPreview" class="attach-preview" alt="预览" /><span>已附加图片</span><button id="attachClearBtn" title="移除">×</button></div>
+            <textarea id="input" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行（可上传图片，AI 会先看图再回答）" spellcheck="false"></textarea>
+            <div class="input-actions">
+              <button id="attachBtn" class="btn ico-btn" title="上传图片，AI 会先通过本地视觉模型看图"><span data-ico="upload"></span></button>
+              <button id="abortBtn" class="btn danger ico-btn" hidden><span data-ico="stop"></span>停止</button>
+              <button id="sendBtn" class="btn primary ico-btn"><span data-ico="send"></span>发送</button>
+              <input type="file" id="attachFile" accept="image/*" hidden />
+            </div>
+          </footer>
+        </section>
+
+        <!-- 今日总结视图 -->
+        <section id="summaryView" hidden>
+          <div class="summary-head">
+            <h2><span data-ico="summary"></span>今日总结</h2>
+            <span id="sumStatus" class="summary-status"></span>
+            <span class="dl-spacer"></span>
+            <button id="sumRunBtn" class="btn primary ico-btn" title="立即生成今天的活动小结"><span data-ico="summary"></span>立即总结</button>
+          </div>
+          <div class="summary-config">
+            <label class="sum-toggle">
+              <span class="switch"><input type="checkbox" id="sumEnabled" /><span class="slider"></span></span>
+              <span>自动总结</span>
+            </label>
+            <label class="sum-freq">频率
+              <select id="sumFreq" title="自动总结间隔">
+                <option value="1800000">每 30 分钟</option>
+                <option value="3600000">每 1 小时</option>
+                <option value="7200000">每 2 小时</option>
+                <option value="14400000">每 4 小时</option>
+                <option value="28800000">每 8 小时</option>
+                <option value="86400000">每天一次</option>
+              </select>
+            </label>
+            <div class="sum-strength">
+              <span class="sum-strength-label">强度</span>
+              <div class="seg" id="sumStrength">
+                <button type="button" data-strength="brief" title="一句话概览，80 字内">简短</button>
+                <button type="button" data-strength="medium" title="概览 + 分类要点，300 字内">标准</button>
+                <button type="button" data-strength="detailed" title="详尽报告 + 后续建议">详细</button>
+              </div>
+            </div>
+            <span class="summary-hint" id="sumHint"></span>
+          </div>
+          <div class="summary-list" id="sumList"></div>
+        </section>
+
+        <!-- 知识库（RAG）视图 -->
+        <section id="kbView" hidden>
+          <div class="kb-head">
+            <h2><span data-ico="book"></span>知识库</h2>
+            <span id="kbStatus" class="kb-status"></span>
+            <span class="dl-spacer"></span>
+            <button id="kbImportBtn" class="btn ico-btn" title="导入文档文件"><span data-ico="upload"></span>导入文件</button>
+          </div>
+
+          <div id="kbImportPanel" class="kb-import" hidden>
+            <div class="kb-import-row">
+              <input id="kbName" class="dl-input" placeholder="文档名称（可选）" spellcheck="false" />
+              <textarea id="kbText" class="dl-input kb-text" rows="3" placeholder="粘贴要导入的文本内容…" spellcheck="false"></textarea>
+            </div>
+            <div class="kb-import-actions">
+              <button id="kbImportTextBtn" class="btn primary">导入文本</button>
+            </div>
+          </div>
+
+          <div class="kb-body">
+            <div class="kb-col">
+              <h3 class="kb-col-title">文档（<span id="kbDocCount">0</span>）</h3>
+              <div id="kbDocList" class="kb-doc-list"></div>
+            </div>
+            <div class="kb-col">
+              <h3 class="kb-col-title">测试检索</h3>
+              <div class="kb-search-row">
+                <input id="kbQuery" class="dl-input grow" placeholder="输入问题，检索知识库…" spellcheck="false" />
+                <button id="kbSearchBtn" class="btn primary">检索</button>
+              </div>
+              <div id="kbResults" class="kb-results"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- API 配置视图 -->
+        <section id="apiView" hidden>
+          <div class="api-head">
+            <h2><span data-ico="key"></span>API 配置</h2>
+            <span id="apiStatus" class="api-status"></span>
+            <span class="dl-spacer"></span>
+            <button id="apiRefreshBtn" class="btn ico-btn" title="刷新状态"><span data-ico="refresh"></span>刷新</button>
+          </div>
+
+          <div class="api-body">
+            <!-- 连接状态总览 -->
+            <div class="api-card">
+              <h3 class="api-card-title">连接状态</h3>
+              <div id="apiOverview" class="api-overview">加载中…</div>
+            </div>
+
+            <!-- API Key -->
+            <div class="api-card">
+              <h3 class="api-card-title">🔑 API Key</h3>
+              <div class="api-row">
+                <label class="api-label" for="apiProvider">Provider</label>
+                <select id="apiProvider" class="dl-input api-grow" title="服务提供商"></select>
+              </div>
+              <div class="api-row">
+                <label class="api-label" for="apiKeyInput">API Key</label>
+                <input id="apiKeyInput" class="dl-input api-grow" type="password"
+                       placeholder="sk-…（保存到 ~/.pi/agent/auth.json）"
+                       spellcheck="false" autocomplete="off" />
+                <button id="apiKeyToggle" class="btn small" title="显示/隐藏 Key">显示</button>
+              </div>
+              <div class="api-row api-actions">
+                <button id="apiSaveBtn" class="btn primary ico-btn"><span data-ico="save"></span>保存 Key</button>
+                <button id="apiTestBtn" class="btn ico-btn"><span data-ico="run"></span>测试连接</button>
+                <button id="apiEnvBtn" class="btn small" title="读取系统环境变量 DEEPSEEK_API_KEY 填入输入框">从环境变量填入</button>
+                <span id="apiKeyHint" class="api-hint"></span>
+              </div>
+              <div class="api-note">💡 新电脑推荐：设置环境变量 <code>DEEPSEEK_API_KEY</code> 后启动，应用会自动完成配置。</div>
+            </div>
+
+            <!-- 默认模型 -->
+            <div class="api-card">
+              <h3 class="api-card-title">🧠 默认模型</h3>
+              <div class="api-row">
+                <label class="api-label" for="apiModelSelect">当前默认</label>
+                <select id="apiModelSelect" class="dl-input api-grow" title="选择后点击应用，立即切换当前会话并写入默认配置"></select>
+                <button id="apiApplyModelBtn" class="btn primary">应用</button>
+              </div>
+              <div id="apiModelList" class="api-model-list">加载中…</div>
+            </div>
+
+            <!-- 环境信息 -->
+            <div class="api-card">
+              <h3 class="api-card-title">🖥 环境信息</h3>
+              <div id="apiEnvInfo" class="api-env">加载中…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 下载停靠面板 -->
+        <div id="dockPanel" hidden>
+          <div id="dockHandle"></div>
+          <div class="dl-header">
+            <span class="drag-grip" id="dragGrip" title="拖动此处移动窗口" data-ico="grip"></span>
+            <h2><span id="dlHeadIco" data-ico="download"></span>下载</h2>
+            <span id="dlCount" class="dl-count"></span>
+            <span class="dl-spacer"></span>
+            <button id="addDlBtn" class="btn small" title="添加下载" data-ico="plus"></button>
+            <div class="dock-controls" id="dockControls">
+              <button class="dock-side-btn" data-side="left" title="停靠到左侧" data-ico="dockleft"></button>
+              <button class="dock-side-btn" data-side="bottom" title="停靠到底部" data-ico="dockbottom"></button>
+              <button class="dock-side-btn" data-side="top" title="停靠到顶部" data-ico="docktop"></button>
+              <button class="dock-side-btn" data-side="right" title="停靠到右侧" data-ico="dockright"></button>
+              <button id="dockFloatBtn" class="btn small" title="独立成窗口" data-ico="floatwin"></button>
+              <button id="dockCloseBtn" class="btn small" title="关闭下载面板" data-ico="close"></button>
+            </div>
+            <div class="float-controls" id="floatControls" hidden>
+              <button id="dockMinBtn" class="btn small" title="最小化" data-ico="minimize"></button>
+              <button id="dockDockBtn" class="btn small ico-btn" title="停靠回主窗口"><span data-ico="dockback"></span>停靠回主窗</button>
+              <button id="floatCloseBtn" class="btn small" title="关闭窗口" data-ico="close"></button>
+            </div>
+          </div>
+
+          <div id="addDlPanel" class="dl-add" hidden>
+            <input id="dlUrl" class="dl-input" placeholder="文件链接（http/https）" spellcheck="false" />
+            <div class="dl-add-row">
+              <input id="dlName" class="dl-input grow" placeholder="文件名（可选）" spellcheck="false" />
+              <input id="dlDest" class="dl-input grow" placeholder="保存目录（缺省为系统下载文件夹）" spellcheck="false" />
+              <button id="dlDestBtn" class="btn small">浏览</button>
+            </div>
+            <button id="dlStartBtn" class="btn primary dl-start"><span id="dlStartIco" data-ico="download"></span>开始下载</button>
+          </div>
+
+          <div id="dlList" class="dl-list"></div>
+          <div id="dlEmpty" class="dl-empty">暂无下载任务</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/marked/lib/marked.umd.js"></script>
+  <script src="../node_modules/dompurify/dist/purify.min.js"></script>
+  <script src="icons.js"></script>
+
+  <!-- 历史记录右键菜单 -->
+  <div id="ctxMenu" class="ctx-menu" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
