@@ -1,72 +1,260 @@
-# Pi Desktop
+<div align="center">
 
-把 Pi 编码代理做成 Windows 桌面应用：基于 **Electron + Pi SDK**，含聊天、受管下载、历史会话、知识库 RAG、ComfyUI 风格多智能体节点画布。
+# π Pi Desktop
 
-> 详细使用手册见 `nodes-docs/Pi桌面应用使用指南.guide.P0.md`（已同步到 `~/.pi/nodes-docs/`，AI 会读取）。
+**基于 Electron + Pi SDK 的多智能体桌面应用**
 
-## 🚀 启动
-- 双击 `启动Pi桌面应用.bat` 或 `重启Pi桌面应用.bat`（后者先关旧再启新，仅处理本应用进程）
-- 或 `npm start`
+聊天 · 受管下载 · 知识库 RAG · ComfyUI 风格节点画布 · 今日总结
 
-## ✨ 启动动画（加载窗口平滑放大）
-启动时显示**加载窗口**（`renderer/splash.html`，420×300 无边框透明窗口）：
-- π Logo 呼吸光晕 + 双旋转光环 + 流动加载条，实时显示初始化进度（检测环境 → 模型 → 节点 → 知识库 → 蓝图 → 会话 → 就绪 ✓）
-- 初始化完成后播放**平滑放大**：加载窗口一次性就位到主窗口尺寸，内容用 GPU transform 从屏幕中心平滑扩大（560ms easeOutCubic，无逐帧窗口操作、无撕裂）
-- 放大完成 → 主窗口就位 → 加载窗口淡出，主界面浮现
+![Electron](https://img.shields.io/badge/Electron-43.3-47848F?logo=electron&logoColor=white)
+![Pi SDK](https://img.shields.io/badge/Pi%20SDK-0.84.1-5E8BFF)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## ⚙️ API 配置界面（侧边栏「API 配置」）
-侧边栏新增 **API 配置** 页面，功能完整：
-- **连接状态总览**：API Key 状态（掩码显示）、Provider、默认模型、环境变量、可用模型数
-- **API Key 管理**：选择 Provider、输入/显示切换、保存（写 `~/.pi/agent/auth.json` 并立即重建模型运行时）、**测试连接**（实测 /v1/models，显示延迟与模型数）、**从环境变量填入**
-- **默认模型**：下拉应用 + 模型卡片一键点击应用（写 settings.json + 切换当前会话）
-- **环境信息**：三个配置文件路径、环境变量状态、工作目录
-- 保存 Key 后自动刷新模型列表（session:models 广播），所有操作均有结果反馈（聊天区通知 + 页面提示）
+</div>
 
-## 🔧 自动检测与自动配置（新电脑免配置）
-应用启动时自动执行（`auto-config.js`）：
-- **检测**本机 `~/.pi/agent/` 下的 `auth.json`（API Key）、`models-store.json`（模型清单）、`settings.json`（默认模型）及运行时目录是否完整
-- **缺失时自动补齐**：创建 `~/.pi/{agent,nodes,nodes-docs,blueprints,kb,summary}` 目录，从 `bootstrap/agent/` 模板复制模型与设置配置
-- **API Key 安全三路**（项目内不存 Key）：
-  1. 本机已有有效 Key → 不动
-  2. 设置环境变量 `DEEPSEEK_API_KEY` → 启动自动生成 `auth.json`（**新电脑推荐**）
-  3. 都没有 → 写入占位文件，聊天区提示手动配置
-- 检测/配置结果输出到启动日志，并在聊天区显示通知
+---
 
-## ✨ 功能总览
+## 📖 简介
+
+Pi Desktop 把 [Pi 编码代理](https://github.com/earendil-works/pi-coding-agent) 封装成 Windows 桌面应用，提供图形化界面来完成复杂 AI 工作流：
+
+- **多智能体协作**：ComfyUI 风格的节点画布，让多个 AI 智能体并行/串联协作
+- **知识库增强**：本地 RAG 检索，让 AI 基于你的文档回答问题
+- **全功能聊天**：流式输出、Markdown、思考过程折叠、工具调用可视化
+- **零配置迁移**：自动检测环境、自动完成配置，拷到任何电脑即用
+
+> ⚡ 核心亮点：**节点系统** —— 像搭积木一样编排 AI 智能体工作流，支持并行执行、圆桌会议、上下文传导。
+
+---
+
+## ✨ 功能特性
 
 | 模块 | 说明 |
 |------|------|
-| 🏠 主页 | 大输入框、进行中的节点任务、最近聊天；左上角 π Logo 回主页 |
-| 💬 聊天 | 流式回复 / Markdown / 思考折叠 / 工具卡片 / 模型切换 / 新会话 |
-| ⬇ 下载 | 受管下载（进度/暂停/继续/停止/重试）；可停靠上下左右或独立窗口 |
-| 🕘 历史 | 会话右键菜单：加载/归档/恢复/删除；归档区 `~/.pi/agent/sessions-archive/` |
-| 📚 知识库 | RAG：导入文件/文本、检索、文档管理（本地嵌入模型） |
-| 🧩 节点 | ComfyUI 风格画布：节点/连线/并行/循环/传导/动画 |
-| 📋 总结 | 今日活动小结（自动/手动） |
+| 🏠 **主页** | 大输入框、进行中的节点任务、最近聊天；左上角 π Logo 一键回主页 |
+| 💬 **聊天** | 流式回复 / Markdown / 思考折叠 / 工具卡片 / 模型切换 / 新会话 / 图片识别 |
+| 🧩 **节点画布** | ComfyUI 风格：节点、连线、自动并行、圆桌会议、上下文传导、创建动画 |
+| 📚 **知识库** | 本地 RAG：导入文件/文本、向量化索引、语义检索（本地嵌入模型） |
+| ⬇️ **受管下载** | 进度/暂停/继续/停止/重试；可停靠窗口四周或独立成窗 |
+| 🕘 **历史记录** | 会话右键菜单：加载/归档/恢复/删除 |
+| ⚙️ **API 配置** | 图形化管理 API Key：保存/测试连接/切换模型/环境变量 |
+| 🔧 **自动配置** | 启动自动检测环境，缺失配置自动补齐（新电脑免配置） |
+| 📋 **今日总结** | 自动/手动生成当日活动小结 |
+| ✨ **启动动画** | 加载窗口平滑放大衔接主界面 |
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+- **Node.js** ≥ 22
+- **Windows 10/11**（当前版本面向 Windows）
+
+### 安装与启动
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/heixiu41/pi-desktop.git
+cd pi-desktop
+
+# 2. 安装依赖
+npm install
+
+# 3. 启动
+npm start
+# 或直接双击「启动Pi桌面应用.bat」
+```
+
+> 也可不克隆仓库：下载发布包，解压后双击 `启动Pi桌面应用.bat` 即可。
+
+### 配置 API Key
+
+应用基于 DeepSeek API（OpenAI 兼容），首次使用需配置 Key，**任选一种**：
+
+**方式一：环境变量（推荐）**
+
+设置系统环境变量 `DEEPSEEK_API_KEY=sk-xxx`，启动时应用自动读取并生成配置，无需任何手动操作。
+
+**方式二：界面配置**
+
+启动后 → 侧边栏「**API 配置**」→ 输入 Key → **保存** → **测试连接** 验证 → 选择默认模型 → **应用**。
+
+**方式三：手动编辑**
+
+编辑 `~/.pi/agent/auth.json`：
+
+```json
+{
+  "deepseek": {
+    "type": "api_key",
+    "key": "sk-你的Key"
+  }
+}
+```
+
+> 🔐 项目源码中**不包含任何真实 API Key**，可放心公开与分发。
+
+---
 
 ## 🧩 节点系统（核心）
 
-**画布**：独立窗口。平移/缩放/框选/多选/右键菜单/双击配置/Delete 删除；**创建动画**（节点缩放淡入、连线自绘）。
+### 什么是节点系统？
 
-**节点类型**：`input` 输入 / `output` 输出 / `agent` 智能体（含**传导模式 carryContext**）/ `retrieve` RAG 检索 / `conference` 圆桌会议（多轮共享对话 + **AI 主持人判定循环终止**）/ 自定义节点（JSON 声明 + JS 实现，放 `~/.pi/nodes/` 或项目 `.pi/nodes/`）。
+节点系统是 Pi Desktop 的核心能力：每个节点是一个**独立 AI 智能体**（或数据源/处理器），用连线组成**有向无环图**，应用按拓扑排序自动执行——互不依赖的节点**并行运行**，高效完成复杂任务。
 
-**执行模型**：拓扑排序，无依赖分支自动并行；调试运行选中节点（◉）；停止（■）。
+```
+示例：并行调研工作流
 
-**蓝图**：新建/保存/加载（`~/.pi/blueprints/`）；预设：规划→执行→审查链、并行调研、代码审查。
+   ┌──────────┐
+   │  input   │  初始问题
+   └────┬─────┘
+        │
+   ┌────┴────┐
+   │  agent  │  智能体A：调研技术方案
+   │  agent  │  智能体B：调研市场行情   ← 并行执行
+   │  agent  │  智能体C：调研竞品
+   └────┬────┘
+        │
+   ┌────┴────┐
+   │  agent  │  汇总智能体：整合三路结果
+   └────┬────┘
+        │
+   ┌────┴────┐
+   │ output  │  最终报告
+   └─────────┘
+```
 
-**AI 工具**：`view_node_library` / `create_node` / `list_blueprints` / `run_blueprint` / `view_blueprint_result` / `search_knowledge` / `import_knowledge` / `download`。
+### 内置节点类型
 
-## 🛠 开发遥控（AI 驱动演示/调试）
-主进程轮询 `~/.pi/dev-cmd.jsonl`（`{"id","target":"main"|"canvas","code"}`），执行后结果写 `~/.pi/dev-result.jsonl`。画布暴露 `window.__nodeApi`（`newGraph/addNode/addEdge/configNode/setInput/runAndWait`）。改渲染器代码重载画布即可；改主进程引擎需重启。
+| 类型 | 说明 |
+|------|------|
+| `input` | 输入节点：提供初始文本/文件 |
+| `output` | 输出节点：汇总最终结果 |
+| `agent` | 智能体节点：独立会话，可配置提示词/模型/思考级别/工具 |
+| `retrieve` | RAG 检索节点：查询知识库，命中片段传给下游 |
+| `conference` | 圆桌会议：多参与者多轮对话，可选 AI 主持人判定终止 |
+| 自定义 | JSON 声明 + JS 实现，扩展任意功能（`~/.pi/nodes/`） |
 
-## 📁 关键目录
-- `~/.pi/agent/sessions/` 会话 · `~/.pi/agent/sessions-archive/` 归档 · `~/.pi/blueprints/` 蓝图
-- `~/.pi/nodes/` 自定义节点 · `~/.pi/nodes-docs/` AI 说明书（带标记标准）· `~/.pi/kb/` 知识库（模型+索引）
-- `nodes/` 引擎（注册表/蓝图/工具/系统提示词）· `renderer/` 界面 · `embed-worker.mjs` 嵌入子进程
-- `bootstrap/agent/` 自动配置模板（models/settings + auth 占位）· `auto-config.js` 自动检测与配置模块
+### 关键能力
 
-> 🔐 项目内**不含真实 API Key**：新电脑请设置环境变量 `DEEPSEEK_API_KEY`，或启动后按提示编辑 `~/.pi/agent/auth.json`。
+- **自动并行**：无依赖分支同时执行
+- **传导模式**（carryContext）：节点间传递完整对话记录，串联多轮深度推理
+- **调试运行**：只运行选中节点，上游使用缓存结果
+- **蓝图**：保存/加载工作流，内置预设（规划→执行→审查、并行调研、代码审查）
+- **画布操作**：平移/缩放/框选/右键菜单/双击配置
 
-## ⚠️ 注意
-- 下载/嵌入模型走受管下载（显示在下载面板）；嵌入 worker 用 `windowsHide` 避免 node.exe 弹窗
-- 改主进程（`main.js`、`nodes/blueprint-manager.js` 等）需重启应用；改渲染器（`renderer/*`）重载对应窗口即可
+---
+
+## 📚 知识库（RAG）
+
+- 导入 **txt / md** 等文档（文件或粘贴文本）
+- 本地嵌入模型（`Xenova/bge-small-zh-v1.5`）向量化，数据不出本机
+- 语义检索增强回答：提问时 AI 自动检索相关知识库内容
+- 文档管理：查看/删除文档，测试检索效果
+
+---
+
+## 🔧 自动配置机制
+
+应用启动时自动执行 `auto-config.js`：
+
+1. **检测** `~/.pi/agent/` 下配置（API Key / 模型清单 / 默认设置）与运行时目录
+2. **补齐**：自动创建目录，从 `bootstrap/agent/` 模板恢复模型与设置
+3. **API Key 三路安全策略**：已有配置 → 环境变量 → 界面手动配置
+
+因此把项目文件夹拷贝到任何新电脑，`npm install` 后即可运行，无需手动搭建环境。
+
+---
+
+## 📁 目录结构
+
+```
+pi-desktop/
+├── main.js                    # Electron 主进程（窗口/引擎/IPC）
+├── preload.js                 # 预加载脚本（安全桥接）
+├── auto-config.js             # 自动检测与配置模块
+├── bootstrap/agent/           # 自动配置模板（无真实 Key）
+├── download-manager.js        # 受管下载
+├── download-tool.js           # 下载工具
+├── rag-engine.js              # 知识库 RAG 引擎
+├── embed-worker.mjs           # 嵌入子进程（向量化）
+├── summary.js                 # 今日总结
+├── nodes/                     # 节点系统引擎
+│   ├── node-registry.js       # 节点注册表
+│   ├── blueprint-manager.js   # 蓝图管理/执行
+│   ├── ai-tools.js            # AI 工具
+│   ├── kb-tools.js            # 知识库工具
+│   ├── system-prompt.js       # 系统提示词
+│   └── vision-tool.js         # 视觉工具
+├── nodes-docs/                # AI 说明书（分类/重要级标记）
+├── renderer/                  # 界面
+│   ├── index.html / app.js / style.css     # 主界面
+│   ├── canvas.html / canvas.js / canvas.css # 节点画布
+│   └── splash.*               # 启动动画
+└── package.json
+```
+
+**运行时数据**（不在项目内，位于用户目录）：
+
+```
+~/.pi/agent/          # 配置（auth/models/settings）与会话
+~/.pi/nodes/          # 自定义节点
+~/.pi/blueprints/     # 保存的蓝图
+~/.pi/kb/             # 知识库（模型+索引）
+```
+
+---
+
+## 🛠️ 技术栈
+
+| 技术 | 用途 |
+|------|------|
+| [Electron](https://www.electronjs.org/) | 桌面应用框架 |
+| [Pi Coding Agent SDK](https://github.com/earendil-works/pi-coding-agent) | AI 智能体会话引擎 |
+| [Xenova Transformers.js](https://github.com/xenova/transformers.js) | 本地嵌入模型（RAG） |
+| marked + DOMPurify | Markdown 渲染与安全过滤 |
+| DeepSeek API | 模型服务（OpenAI 兼容） |
+
+---
+
+## ❓ 常见问题
+
+**Q：启动后提示"未检测到 API Key"？**
+设置环境变量 `DEEPSEEK_API_KEY` 后重启，或打开「API 配置」页面填入 Key。
+
+**Q：节点画布打不开？**
+点击侧边栏「节点」会自动打开画布窗口；若未出现，检查是否被弹窗拦截。
+
+**Q：知识库导入慢？**
+首次使用需要下载本地嵌入模型（显示在下载面板），之后导入即时完成。
+
+**Q：如何让 AI 协作完成多步骤任务？**
+直接在聊天中说「创建 xxx 蓝图并运行」，AI 会读取说明书自动规划并执行；或手动在画布编排节点。
+
+**Q：修改代码后不生效？**
+主进程（`main.js`、`nodes/*`）修改后需重启应用；渲染进程（`renderer/*`）重载窗口即可。
+
+---
+
+## 🤝 贡献
+
+欢迎提交 Issue 与 PR：
+
+1. Fork 本仓库
+2. 创建特性分支（`git checkout -b feature/xxx`）
+3. 提交修改（`git commit -m "feat: xxx"`）
+4. 推送分支并提交 Pull Request
+
+---
+
+## 📄 许可证
+
+本项目基于 **MIT License** 开源。
+
+---
+
+<div align="center">
+  <sub>π Pi Desktop · 用节点编排智能 · Powered by Electron & Pi SDK</sub>
+</div>
